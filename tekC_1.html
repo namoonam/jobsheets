@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รายการของ + ค่าแรง (หลายหน้างาน)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1f2b;
+    --muted:#5b6472;
+    --line:#d3d9e3;
+    --line-strong:#9aa4b4;
+    --head:#1f3a5f;
+    --head-sub:#2f5686;
+    --band:#f4f7fb;
+    --mat:#eef4ec;
+    --lab:#fbf1e8;
+    --total:#eaf0f9;
+    --paper:#ffffff;
+    --bg:#eef1f5;
+    --edit:#fffbe6;
+    --edit-line:#e6c84a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Sarabun',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:24px 16px;
+  }
+  .app{
+    display:flex;
+    gap:18px;
+    max-width:1360px;
+    margin:0 auto;
+    align-items:flex-start;
+  }
+
+  /* ---------- Sidebar (แถบหน้างาน) ---------- */
+  .sidebar{
+    width:250px;
+    flex:0 0 250px;
+    background:var(--paper);
+    border-radius:14px;
+    box-shadow:0 4px 24px rgba(20,30,50,.08);
+    overflow:hidden;
+    position:sticky;
+    top:24px;
+  }
+  .s-head{
+    padding:16px 16px 14px;
+    border-bottom:3px solid var(--head);
+  }
+  .s-head h2{margin:0;font-size:16px;font-weight:700;color:var(--head);}
+  .s-head .cnt{font-size:12px;color:var(--muted);margin-top:2px;}
+  .newBtn{
+    width:100%;
+    margin-top:12px;
+    font-family:inherit;font-size:14px;font-weight:600;
+    border:none;border-radius:8px;padding:9px 12px;cursor:pointer;
+    background:var(--head);color:#fff;
+  }
+  .newBtn:hover{background:var(--head-sub);}
+  .joblist{list-style:none;margin:0;padding:0;max-height:70vh;overflow:auto;}
+  .job{
+    padding:11px 14px;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+    border-left:3px solid transparent;
+  }
+  .job:hover{background:var(--band);}
+  .job.active{background:var(--total);border-left-color:var(--head);}
+  .job .jn{font-weight:600;font-size:14px;color:var(--ink);word-break:break-word;}
+  .job .jd{font-size:11px;color:var(--muted);margin-top:2px;}
+  .job .acts{display:flex;gap:4px;margin-top:7px;}
+  .job .acts button{
+    font-family:inherit;font-size:12px;
+    border:1px solid var(--line-strong);
+    background:#fff;color:var(--muted);
+    border-radius:6px;padding:2px 8px;cursor:pointer;line-height:1.4;
+  }
+  .job .acts button:hover{background:#f0f4fa;color:var(--head);}
+  .job .acts button.danger:hover{background:#fdecef;color:#c0576b;border-color:#e6a9b5;}
+  .empty-note{padding:16px 14px;font-size:13px;color:var(--muted);line-height:1.6;}
+
+  /* ---------- Main sheet ---------- */
+  .app.sidebar-hidden .sidebar{display:none;}
+  .sheet{
+    flex:1;
+    min-width:0;
+    background:var(--paper);
+    border-radius:14px;
+    box-shadow:0 4px 24px rgba(20,30,50,.08);
+    overflow:hidden;
+  }
+  .head{
+    padding:26px 30px 20px;
+    border-bottom:3px solid var(--head);
+  }
+  .head h1{
+    margin:0;
+    font-size:24px;
+    font-weight:700;
+    color:var(--head);
+    letter-spacing:.2px;
+    display:inline-block;
+  }
+  h1.edit,.head .sub.edit{
+    background:var(--edit);
+    outline:1px dashed var(--edit-line);
+    outline-offset:3px;
+    border-radius:4px;
+    cursor:text;
+  }
+  h1.edit:focus,.head .sub.edit:focus{
+    background:#fff8c8;
+    outline:2px solid var(--head-sub);
+  }
+  .head .sub{
+    margin-top:4px;
+    font-size:14px;
+    color:var(--muted);
+  }
+  .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    padding:14px 30px;
+    background:var(--band);
+    border-bottom:1px solid var(--line);
+  }
+  .toolbar .hint{font-size:13px;color:var(--muted);}
+  .toolbar .hint b{color:var(--head);}
+  .btn{
+    font-family:inherit;font-size:14px;font-weight:600;
+    border:none;border-radius:8px;padding:9px 16px;cursor:pointer;
+    background:var(--head);color:#fff;transition:background .15s;
+  }
+  .btn:hover{background:var(--head-sub);}
+  .btn.ghost{background:#fff;color:var(--head);border:1px solid var(--line-strong);}
+  .btn.ghost:hover{background:#f0f4fa;}
+  .btn.scan{background:#3a7d44;}
+  .btn.scan:hover{background:#2f6838;}
+  .btn:disabled{opacity:.55;cursor:default;}
+  .status{font-size:13px;color:var(--head-sub);font-weight:600;}
+  .status.err{color:#c0576b;}
+  .save-status{font-size:12.5px;color:#3a7d44;font-weight:600;}
+  .spacer{flex:1;}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:880px;}
+  thead th{
+    background:var(--head);color:#fff;font-weight:600;padding:9px 10px;
+    text-align:center;border:1px solid var(--head-sub);white-space:nowrap;vertical-align:middle;
+  }
+  thead tr.sub th{background:var(--head-sub);font-weight:500;font-size:13px;}
+  tbody td{padding:8px 10px;border:1px solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--band);}
+  .c-no{width:44px;text-align:center;color:var(--muted);}
+  .c-item{min-width:230px;font-weight:500;}
+  .c-qty{width:70px;text-align:right;}
+  .c-unit{width:66px;text-align:center;color:var(--muted);}
+  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .grand{font-weight:700;}
+  .dash{color:#b7bfca;text-align:center;}
+  col.mat{background:rgba(76,140,90,.05);}
+  col.lab{background:rgba(200,120,50,.05);}
+  .edit{background:var(--edit);outline:1px dashed var(--edit-line);outline-offset:-2px;cursor:text;}
+  tbody tr:nth-child(even) .edit{background:#fdf7dc;}
+  .edit:focus{background:#fff8c8;outline:2px solid var(--head-sub);outline-offset:-2px;}
+  .edit:empty::before{content:attr(data-ph);color:#c4b98a;}
+  .c-act{width:44px;text-align:center;}
+  .del{border:none;background:transparent;color:#c0576b;font-size:17px;line-height:1;cursor:pointer;padding:4px 6px;border-radius:6px;}
+  .del:hover{background:#fdecef;}
+  tfoot td{padding:11px 10px;border:1px solid var(--line-strong);background:var(--total);font-weight:700;}
+  tfoot .num{font-size:15px;}
+  tfoot .label{text-align:right;color:var(--head);}
+  .summary{display:flex;flex-wrap:wrap;gap:14px;padding:20px 30px 26px;}
+  .card{flex:1 1 200px;border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:#fff;}
+  .card.mat{border-top:3px solid #4c8c5a;}
+  .card.lab{border-top:3px solid #c87832;}
+  .card.tot{border-top:3px solid var(--head);background:var(--total);}
+  .card .k{font-size:13px;color:var(--muted);}
+  .card .v{font-size:22px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums;}
+  .card .v small{font-size:13px;font-weight:500;color:var(--muted);}
+  .foot-note{padding:0 30px 24px;font-size:12.5px;color:var(--muted);line-height:1.6;}
+
+  @media print{
+    @page{ size:A4; margin:1cm; }
+    html,body{width:auto;}
+    body{background:#fff;padding:0;}
+    .app{display:block;max-width:none;gap:0;}
+    .sidebar,.toolbar,.no-print{display:none !important;}
+    .sheet{box-shadow:none;border-radius:0;}
+    .edit,h1.edit,.head .sub.edit{background:transparent;outline:none;}
+    tbody tr:nth-child(even) .edit{background:transparent;}
+
+    /* บีบตารางให้พอดี A4 (เว้นขอบ 1 ซม.) */
+    .head{padding:0 0 8px;}
+    .head h1{font-size:18px;}
+    .head .sub{font-size:12px;}
+    .table-wrap{overflow:visible;}
+    table{min-width:0 !important;width:100%;font-size:10.5px;table-layout:fixed;}
+    thead th,tbody td,tfoot td{padding:3px 4px;word-wrap:break-word;overflow-wrap:break-word;}
+    thead th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    tbody tr:nth-child(even){-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .c-item{min-width:0;white-space:normal;}
+    .num{white-space:normal;}
+    /* กำหนดสัดส่วนความกว้างแต่ละคอลัมน์ให้พอดี A4 */
+    colgroup col:nth-child(1){width:6%;}
+    colgroup col:nth-child(2){width:28%;}
+    colgroup col:nth-child(3){width:8%;}
+    colgroup col:nth-child(4){width:8%;}
+    colgroup col:nth-child(5){width:9%;}
+    colgroup col:nth-child(6){width:10%;}
+    colgroup col:nth-child(7){width:9%;}
+    colgroup col:nth-child(8){width:10%;}
+    colgroup col:nth-child(9){width:12%;}
+    colgroup col:nth-child(10){width:0;}
+    .summary,.foot-note{padding-left:0;padding-right:0;}
+    .summary{page-break-inside:avoid;}
+    tbody tr{page-break-inside:avoid;}
+  }
+  @media (max-width:860px){
+    .app{flex-direction:column;}
+    .sidebar{width:100%;flex:none;position:static;}
+    .joblist{max-height:220px;}
+  }
+  @media (max-width:560px){
+    body{padding:12px 8px;}
+    .head{padding:18px;}
+    .head h1{font-size:20px;}
+    .toolbar{padding:12px 18px;}
+    .summary{padding:16px 18px 20px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== แถบหน้างาน ===== -->
+  <aside class="sidebar no-print">
+    <div class="s-head">
+      <h2>📁 หน้างาน</h2>
+      <div class="cnt" id="jobCount"></div>
+      <button class="newBtn" id="newSheet">＋ สร้างหน้างาน</button>
+    </div>
+    <ul class="joblist" id="joblist"></ul>
+  </aside>
+
+  <!-- ===== ใบรายการ ===== -->
+  <div class="sheet">
+    <div class="head">
+      <h1 class="edit" contenteditable="true">รายการของ + ค่าแรง — ตึก C</h1>
+      <div class="sub edit" contenteditable="true">ใบสรุปรายการวัสดุและค่าแรง</div>
+    </div>
+
+    <div class="toolbar no-print">
+      <button class="btn ghost" id="toggleSidebar" title="ซ่อน/แสดงแถบหน้างาน">◀ ซ่อนหน้างาน</button>
+      <button class="btn scan" id="scanBtn">📷 สแกนจากรูป</button>
+      <button class="btn" id="addRow">＋ เพิ่มแถว</button>
+      <button class="btn ghost" id="printBtn">🖨 พิมพ์ / บันทึก PDF</button>
+      <input type="file" id="scanFile" accept="image/*" hidden>
+      <span class="status" id="scanStatus"></span>
+      <span class="spacer"></span>
+      <span class="save-status" id="saveStatus"></span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <colgroup>
+          <col><col><col><col>
+          <col class="mat"><col class="mat">
+          <col class="lab"><col class="lab">
+          <col><col>
+        </colgroup>
+        <thead>
+          <tr>
+            <th rowspan="2">ลำดับ</th>
+            <th rowspan="2">รายการ</th>
+            <th rowspan="2">จำนวน</th>
+            <th rowspan="2">หน่วย</th>
+            <th colspan="2">ค่าวัสดุ</th>
+            <th colspan="2">ค่าแรง</th>
+            <th rowspan="2">รวมทั้งสิ้น<br>(บาท)</th>
+            <th rowspan="2" class="no-print"></th>
+          </tr>
+          <tr class="sub">
+            <th>หน่วยละ</th><th>จำนวนเงิน</th>
+            <th>หน่วยละ</th><th>จำนวนเงิน</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+        <tfoot>
+          <tr>
+            <td class="label" colspan="5">รวมเป็นเงิน</td>
+            <td class="num" id="sumMat">0</td>
+            <td></td>
+            <td class="num" id="sumLab">0</td>
+            <td class="num grand" id="sumTotal">0</td>
+            <td class="no-print"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="summary">
+      <div class="card mat"><div class="k">รวมค่าวัสดุ</div><div class="v"><span id="cardMat">0</span> <small>บาท</small></div></div>
+      <div class="card lab"><div class="k">รวมค่าแรง</div><div class="v"><span id="cardLab">0</span> <small>บาท</small></div></div>
+      <div class="card tot"><div class="k">รวมทั้งสิ้น</div><div class="v"><span id="cardTotal">0</span> <small>บาท</small></div></div>
+    </div>
+
+    <div class="foot-note">
+      รวมทั้งหมด <span id="rowCount">0</span> รายการ • คำนวณ: จำนวนเงินค่าวัสดุ = จำนวน × ค่าวัสดุหน่วยละ, จำนวนเงินค่าแรง = จำนวน × ค่าแรงหน่วยละ<br>
+      บันทึกลงเครื่องนี้อัตโนมัติ • ช่องค่าแรงหน่วยละที่ว่างจะถือว่าไม่มีค่าแรง (แสดง “–”)
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ================= ข้อมูลเริ่มต้น (หน้างานตัวอย่างใบแรก) ================= */
+  var DEFAULT_ROWS = [
+    ["สายไฟ THW 1×1.5 มิล",100,"เมตร",11,null],
+    ["สายไฟ THW 1×2.5 มิล",500,"เมตร",16,null],
+    ["ท่อ PVC 1/2 สีขาว",160,"เมตร",13,20],
+    ["คอนเนคเตอร์ 1/2 สีขาว",100,"ตัว",6,null],
+    ["แคล้มก้ามปู 1/2 สีขาว",200,"ตัว",6,null],
+    ["ข้อต่อตรง 1/2 สีขาว",30,"ตัว",7,null],
+    ["บล็อกแยกสาย 4×4 สีขาว",26,"อัน",42,null],
+    ["บล็อกแยกสาย 2×4 สีขาว",10,"อัน",30,null],
+    ["บล็อกลอย 2×4",20,"อัน",18,null],
+    ["ฝาหน้ากาก 2×4",20,"อัน",22,null],
+    ["สวิตช์ 1 ทาง",12,"ตัว",25,250],
+    ["สวิตช์ 2 ทาง",8,"ตัว",40,250],
+    ["ปลั๊กกราวด์",6,"ตัว",75,250],
+    ["หลอดนีออน LED 10W /ชุด",6,"ชุด",170,250],
+    ["ชุดนีออน LED 18W เส้น",20,"ชุด",150,250],
+    ["เทปพันสายไฟ เบอร์ ๆ",4,"กล่อง",25,null],
+    ["น็อตสกรูเกลียวปล่อย 1.5 นิ้ว",2,"กล่อง",200,null],
+    ["เทปพันสายไฟ",6,"ม้วน",25,null],
+    ["ไขควงเงิน BEC",2,"ชุด",1295,250]
+  ].map(function(a){ return {name:a[0], qty:a[1], unit:a[2], matUnit:a[3], labUnit:a[4]}; });
+
+  var STORE_KEY = "sre_jobsheets_v1";
+  var tbody = document.getElementById("tbody");
+  var h1 = document.querySelector(".head h1");
+  var subEl = document.querySelector(".head .sub");
+
+  var state = { sheets: {}, currentId: null };
+
+  /* ---------- utils ---------- */
+  function fmt(n){ return Math.round(n).toLocaleString("en-US"); }
+  function parseNum(str){ var v=parseFloat(String(str).replace(/,/g,"").trim()); return isNaN(v)?null:v; }
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  function now(){ return Date.now(); }
+  function fmtDate(ts){
+    if(!ts) return "";
+    var d=new Date(ts);
+    var p=function(x){return (x<10?"0":"")+x;};
+    return p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+(d.getFullYear()+543).toString().slice(2)+" "+p(d.getHours())+":"+p(d.getMinutes());
+  }
+
+  /* ---------- localStorage ---------- */
+  function persist(){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+  function loadState(){
+    try{
+      var raw=localStorage.getItem(STORE_KEY);
+      if(raw){ var s=JSON.parse(raw); if(s&&s.sheets){ state=s; return; } }
+    }catch(e){}
+    // ครั้งแรก: สร้างใบตัวอย่าง
+    var id=uid();
+    state={ sheets:{}, currentId:id };
+    state.sheets[id]={ id:id, name:"ตึก C", title:"รายการของ + ค่าแรง — ตึก C",
+                       subtitle:"ใบสรุปรายการวัสดุและค่าแรง", rows:DEFAULT_ROWS,
+                       createdAt:now(), updatedAt:now() };
+    persist();
+  }
+
+  /* ---------- ตาราง ---------- */
+  function makeRow(r){
+    var tr=document.createElement("tr");
+    tr.innerHTML=
+      '<td class="c-no"></td>'+
+      '<td class="c-item edit" contenteditable="true" data-f="name" data-ph="รายการ"></td>'+
+      '<td class="c-qty edit num" contenteditable="true" data-f="qty" data-ph="0"></td>'+
+      '<td class="c-unit edit" contenteditable="true" data-f="unit" data-ph="หน่วย"></td>'+
+      '<td class="num edit" contenteditable="true" data-f="matU" data-ph="0"></td>'+
+      '<td class="num" data-c="matAmt"></td>'+
+      '<td class="num edit" contenteditable="true" data-f="labU" data-ph="–"></td>'+
+      '<td class="num" data-c="labAmt"></td>'+
+      '<td class="num grand" data-c="total"></td>'+
+      '<td class="c-act no-print"><button class="del" title="ลบแถว">✕</button></td>';
+    tr.querySelector('[data-f="name"]').textContent = r.name||"";
+    tr.querySelector('[data-f="qty"]').textContent  = (r.qty==null?"":r.qty);
+    tr.querySelector('[data-f="unit"]').textContent = r.unit||"";
+    tr.querySelector('[data-f="matU"]').textContent = (r.matUnit==null?"":r.matUnit);
+    tr.querySelector('[data-f="labU"]').textContent = (r.labUnit==null?"":r.labUnit);
+    return tr;
+  }
+
+  function recalcRow(tr){
+    var qty=parseNum(tr.querySelector('[data-f="qty"]').textContent)||0;
+    var matU=parseNum(tr.querySelector('[data-f="matU"]').textContent);
+    var labU=parseNum(tr.querySelector('[data-f="labU"]').textContent);
+    var matAmt=(matU==null)?0:qty*matU;
+    var labAmt=(labU==null)?0:qty*labU;
+    var total=matAmt+labAmt;
+    var mC=tr.querySelector('[data-c="matAmt"]'), lC=tr.querySelector('[data-c="labAmt"]'), tC=tr.querySelector('[data-c="total"]');
+    if(matU==null){mC.textContent="–";mC.className="dash";} else {mC.textContent=fmt(matAmt);mC.className="num";}
+    if(labU==null){lC.textContent="–";lC.className="dash";} else {lC.textContent=fmt(labAmt);lC.className="num";}
+    tC.textContent=fmt(total);
+    return {mat:matAmt,lab:labAmt,total:total};
+  }
+
+  function recalcAll(){
+    var sMat=0,sLab=0,sTot=0,i=1;
+    var rows=tbody.querySelectorAll("tr");
+    rows.forEach(function(tr){
+      tr.querySelector(".c-no").textContent=i++;
+      var r=recalcRow(tr); sMat+=r.mat; sLab+=r.lab; sTot+=r.total;
+    });
+    document.getElementById("sumMat").textContent=fmt(sMat);
+    document.getElementById("sumLab").textContent=fmt(sLab);
+    document.getElementById("sumTotal").textContent=fmt(sTot);
+    document.getElementById("cardMat").textContent=fmt(sMat);
+    document.getElementById("cardLab").textContent=fmt(sLab);
+    document.getElementById("cardTotal").textContent=fmt(sTot);
+    document.getElementById("rowCount").textContent=rows.length;
+  }
+
+  function loadRows(rows){
+    tbody.innerHTML="";
+    (rows||[]).forEach(function(r){ tbody.appendChild(makeRow(r)); });
+    recalcAll();
+  }
+
+  function collectRows(){
+    var out=[];
+    tbody.querySelectorAll("tr").forEach(function(tr){
+      var g=function(f){ return tr.querySelector('[data-f="'+f+'"]').textContent.trim(); };
+      var mu=g("matU"), lu=g("labU");
+      out.push({
+        name:g("name"), qty:g("qty"), unit:g("unit"),
+        matUnit: mu===""? null : mu,
+        labUnit: lu===""? null : lu
+      });
+    });
+    return out;
+  }
+
+  /* ---------- sheet state ---------- */
+  function applySheet(sh){
+    h1.textContent = sh.title || "";
+    subEl.textContent = sh.subtitle || "";
+    loadRows(sh.rows||[]);
+  }
+
+  function captureCurrent(){
+    var sh=state.sheets[state.currentId];
+    if(!sh) return;
+    sh.title=h1.textContent.trim();
+    sh.subtitle=subEl.textContent.trim();
+    sh.rows=collectRows();
+    sh.updatedAt=now();
+  }
+
+  var saveTimer=null;
+  function setSaveStatus(msg){ document.getElementById("saveStatus").textContent=msg||""; }
+  function scheduleSave(){
+    setSaveStatus("กำลังบันทึก…");
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(function(){
+      captureCurrent(); persist(); renderSidebar();
+      setSaveStatus("✓ บันทึกแล้ว "+fmtDate(now()));
+    }, 900);
+  }
+  function saveNow(){
+    clearTimeout(saveTimer);
+    captureCurrent(); persist(); renderSidebar();
+    setSaveStatus("✓ บันทึกแล้ว "+fmtDate(now()));
+  }
+
+  /* ---------- sidebar ---------- */
+  function sheetsOrdered(){
+    return Object.keys(state.sheets).map(function(k){return state.sheets[k];})
+      .sort(function(a,b){ return (a.createdAt||0)-(b.createdAt||0); });
+  }
+
+  function renderSidebar(){
+    var list=document.getElementById("joblist");
+    var arr=sheetsOrdered();
+    document.getElementById("jobCount").textContent=arr.length+" หน้างาน";
+    list.innerHTML="";
+    if(!arr.length){
+      list.innerHTML='<li class="empty-note">ยังไม่มีหน้างาน กด “＋ สร้างหน้างาน”</li>';
+      return;
+    }
+    arr.forEach(function(sh){
+      var li=document.createElement("li");
+      li.className="job"+(sh.id===state.currentId?" active":"");
+      li.dataset.id=sh.id;
+      var nm=(sh.name||"(ไม่มีชื่อ)");
+      li.innerHTML=
+        '<div class="jn"></div>'+
+        '<div class="jd">แก้ไข '+fmtDate(sh.updatedAt)+'</div>'+
+        '<div class="acts">'+
+          '<button data-a="rename">เปลี่ยนชื่อ</button>'+
+          '<button data-a="dup">ทำซ้ำ</button>'+
+          '<button data-a="del" class="danger">ลบ</button>'+
+        '</div>';
+      li.querySelector(".jn").textContent=nm;
+      list.appendChild(li);
+    });
+  }
+
+  document.getElementById("joblist").addEventListener("click", function(e){
+    var li=e.target.closest(".job"); if(!li) return;
+    var id=li.dataset.id;
+    var a=e.target.getAttribute("data-a");
+    if(a==="rename"){ e.stopPropagation(); renameSheet(id); return; }
+    if(a==="dup"){ e.stopPropagation(); duplicateSheet(id); return; }
+    if(a==="del"){ e.stopPropagation(); deleteSheet(id); return; }
+    openSheet(id);
+  });
+
+  function openSheet(id){
+    if(id===state.currentId) return;
+    saveNow();                 // เซฟใบปัจจุบันก่อน
+    state.currentId=id;
+    applySheet(state.sheets[id]);
+    persist(); renderSidebar();
+    setSaveStatus("");
+  }
+
+  function newSheet(){
+    saveNow();
+    var id=uid();
+    var n=Object.keys(state.sheets).length+1;
+    state.sheets[id]={ id:id, name:"หน้างานใหม่ "+n, title:"รายการของ + ค่าแรง",
+                       subtitle:"ใบสรุปรายการวัสดุและค่าแรง",
+                       rows:[{name:"",qty:"",unit:"",matUnit:null,labUnit:null}],
+                       createdAt:now(), updatedAt:now() };
+    state.currentId=id;
+    applySheet(state.sheets[id]);
+    persist(); renderSidebar();
+    setSaveStatus("✓ สร้างหน้างานใหม่แล้ว");
+    renameSheet(id, true);
+  }
+
+  function renameSheet(id, isNew){
+    var sh=state.sheets[id]; if(!sh) return;
+    var v=prompt("ชื่อหน้างาน:", sh.name||"");
+    if(v===null){ return; }
+    v=v.trim(); if(v==="") v = isNew ? sh.name : sh.name;
+    sh.name=v || sh.name; sh.updatedAt=now();
+    persist(); renderSidebar();
+  }
+
+  function duplicateSheet(id){
+    saveNow();
+    var src=state.sheets[id]; if(!src) return;
+    var nid=uid();
+    state.sheets[nid]={ id:nid, name:(src.name||"หน้างาน")+" (สำเนา)",
+                        title:src.title, subtitle:src.subtitle,
+                        rows:JSON.parse(JSON.stringify(src.rows||[])),
+                        createdAt:now(), updatedAt:now() };
+    state.currentId=nid;
+    applySheet(state.sheets[nid]);
+    persist(); renderSidebar();
+    setSaveStatus("✓ ทำซ้ำหน้างานแล้ว");
+  }
+
+  function deleteSheet(id){
+    var sh=state.sheets[id]; if(!sh) return;
+    if(!confirm('ลบหน้างาน "'+(sh.name||"")+'" ?\nลบแล้วกู้คืนไม่ได้')) return;
+    delete state.sheets[id];
+    if(state.currentId===id){
+      var rest=sheetsOrdered();
+      if(rest.length){ state.currentId=rest[rest.length-1].id; applySheet(state.sheets[state.currentId]); }
+      else { // ไม่มีเหลือ → สร้างใบว่างใหม่
+        var nid=uid();
+        state.sheets[nid]={ id:nid, name:"หน้างานใหม่ 1", title:"รายการของ + ค่าแรง",
+                            subtitle:"ใบสรุปรายการวัสดุและค่าแรง",
+                            rows:[{name:"",qty:"",unit:"",matUnit:null,labUnit:null}],
+                            createdAt:now(), updatedAt:now() };
+        state.currentId=nid; applySheet(state.sheets[nid]);
+      }
+    }
+    persist(); renderSidebar();
+  }
+
+  /* ---------- edit listeners ---------- */
+  tbody.addEventListener("input", function(){ recalcAll(); scheduleSave(); });
+  tbody.addEventListener("click", function(e){
+    if(e.target.classList.contains("del")){
+      e.target.closest("tr").remove(); recalcAll(); scheduleSave();
+    }
+  });
+  h1.addEventListener("input", scheduleSave);
+  subEl.addEventListener("input", scheduleSave);
+
+  document.getElementById("addRow").addEventListener("click", function(){
+    var tr=makeRow({name:"",qty:"",unit:"",matUnit:null,labUnit:null});
+    tbody.appendChild(tr); recalcAll(); saveNow();
+    var f=tr.querySelector('[data-f="name"]'); if(f) f.focus();
+  });
+  document.getElementById("newSheet").addEventListener("click", newSheet);
+  document.getElementById("printBtn").addEventListener("click", function(){ window.print(); });
+
+  /* ---------- พับ/แสดงแถบหน้างาน ---------- */
+  var appEl=document.querySelector(".app");
+  var toggleBtn=document.getElementById("toggleSidebar");
+  var SIDEBAR_KEY="sre_sidebar_hidden";
+  function paintToggle(){
+    var hidden=appEl.classList.contains("sidebar-hidden");
+    toggleBtn.textContent = hidden ? "☰ หน้างาน" : "◀ ซ่อนหน้างาน";
+  }
+  function applySidebarState(){
+    var hidden=false; try{ hidden=localStorage.getItem(SIDEBAR_KEY)==="1"; }catch(e){}
+    appEl.classList.toggle("sidebar-hidden",hidden); paintToggle();
+  }
+  toggleBtn.addEventListener("click", function(){
+    var hidden=!appEl.classList.contains("sidebar-hidden");
+    appEl.classList.toggle("sidebar-hidden",hidden);
+    try{ localStorage.setItem(SIDEBAR_KEY, hidden?"1":"0"); }catch(e){}
+    paintToggle();
+  });
+  applySidebarState();
+
+  /* ================= สแกนจากรูป (Gemini ผ่าน Cloudflare Worker) ================= */
+  var WORKER_URL = "https://bold-wildflower-31c1.namp1417.workers.dev";
+  var scanBtn=document.getElementById("scanBtn");
+  var scanFile=document.getElementById("scanFile");
+  var scanStatus=document.getElementById("scanStatus");
+  function setStatus(msg,isErr){ scanStatus.textContent=msg||""; scanStatus.className="status"+(isErr?" err":""); }
+
+  scanBtn.addEventListener("click", function(){
+    if(!WORKER_URL){ setStatus("⚠ ยังไม่ได้ตั้งค่า WORKER_URL",true); return; }
+    scanFile.click();
+  });
+  scanFile.addEventListener("change", function(){
+    var f=scanFile.files&&scanFile.files[0]; if(!f) return;
+    handleScan(f); scanFile.value="";
+  });
+  function downscale(file,maxSide){
+    return new Promise(function(resolve,reject){
+      var img=new Image(), url=URL.createObjectURL(file);
+      img.onload=function(){
+        var w=img.width,h=img.height,s=Math.min(1,maxSide/Math.max(w,h));
+        var cw=Math.round(w*s),ch=Math.round(h*s);
+        var cv=document.createElement("canvas"); cv.width=cw; cv.height=ch;
+        cv.getContext("2d").drawImage(img,0,0,cw,ch);
+        URL.revokeObjectURL(url);
+        var d=cv.toDataURL("image/jpeg",0.9);
+        resolve({base64:d.split(",")[1],mimeType:"image/jpeg"});
+      };
+      img.onerror=function(){ URL.revokeObjectURL(url); reject(new Error("เปิดรูปไม่ได้")); };
+      img.src=url;
+    });
+  }
+  function handleScan(file){
+    scanBtn.disabled=true; setStatus("⏳ กำลังย่อรูป…");
+    downscale(file,1600).then(function(im){
+      setStatus("🔍 กำลังอ่านตารางด้วย AI… (สักครู่)");
+      return fetch(WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({image:im.base64,mimeType:im.mimeType})});
+    }).then(function(res){
+      return res.json().then(function(j){ if(!res.ok) throw new Error(j&&j.error?j.error:("HTTP "+res.status)); return j; });
+    }).then(function(data){
+      var rows=(data&&data.rows)||[];
+      if(!rows.length){ setStatus("ไม่พบรายการในรูป ลองถ่ายให้ชัด/ตรงขึ้น",true); return; }
+      if(tbody.querySelectorAll("tr").length &&
+         !confirm("อ่านได้ "+rows.length+" รายการ\nจะแทนที่ตารางของหน้างานนี้ทั้งหมดไหม? (OK = แทนที่)")){
+        setStatus("ยกเลิกแล้ว — ตารางเดิมไม่ถูกแก้"); return;
+      }
+      loadRows(rows.map(function(r){ return {name:r.name,qty:r.qty,unit:r.unit,matUnit:r.matUnit,labUnit:r.labUnit}; }));
+      saveNow();
+      setStatus("✅ อ่านมา "+rows.length+" รายการ — โปรดตรวจช่องเหลืองให้ถูกต้อง");
+    }).catch(function(err){ setStatus("❌ ผิดพลาด: "+err.message,true); })
+      .then(function(){ scanBtn.disabled=false; });
+  }
+
+  /* ================= start ================= */
+  loadState();
+  if(!state.sheets[state.currentId]){ state.currentId=sheetsOrdered()[0].id; }
+  applySheet(state.sheets[state.currentId]);
+  renderSidebar();
+</script>
+</body>
+</html>
